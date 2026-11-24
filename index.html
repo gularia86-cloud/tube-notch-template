@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b6bcb">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Шаблон гиба трубы</title>
+<style>
+:root{--bg:#f2f4f7;--card:#fff;--line:#d8dce2;--txt:#1c2330;--mut:#6a7381;--acc:#0b6bcb;--bad:#c62828;--ok:#2e7d32;--warn:#b26a00}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font:15px/1.35 system-ui,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+main{max-width:720px;margin:0 auto;padding:8px 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.row3{grid-template-columns:1fr 1fr 1fr}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:2px}
+input[type=number],input[type=text],select{width:100%;padding:9px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;min-height:42px}
+input:focus,select:focus{outline:2px solid #9cc7f2;border-color:var(--acc)}
+.seg{display:flex;gap:6px;margin-bottom:8px}.seg label{flex:1;margin:0;padding:10px 4px;text-align:center;border:1px solid var(--line);border-radius:8px;color:var(--txt);font-size:14px}
+.seg input{display:none}.seg label.on{border-color:var(--acc);background:#e8f2fd;color:var(--acc);font-weight:600}
+.chk{display:flex;align-items:center;gap:8px;margin:6px 0;color:var(--txt);font-size:14px}.chk input{width:20px;height:20px}
+button{font:inherit;padding:11px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--txt);min-height:44px}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+button.dng{color:var(--bad)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+table{width:100%;border-collapse:collapse}td{padding:5px 0;border-bottom:1px solid #eef0f3}td:last-child{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.warn{color:var(--warn);margin-top:6px;font-size:14px}.bad{color:var(--bad)}.ok{color:var(--ok)}
+.hint{color:var(--mut);font-size:12px;margin-top:2px}.hid{display:none}
+#prev{position:sticky;top:0;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.08)}#prev svg{display:block;width:100%;height:auto;max-height:32vh}
+nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
+nav button{flex:1;border:0;border-radius:0;background:none;min-height:56px;color:var(--mut);font-size:13px}nav button.on{color:var(--acc);font-weight:700}
+.item{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #eef0f3}.item .t{flex:1;min-width:0}.item .t b{display:block}.item .t span{color:var(--mut);font-size:12px}
+.item button{min-height:38px;padding:6px 10px}
+#toast{position:fixed;left:12px;right:12px;bottom:76px;background:#222;color:#fff;padding:10px 12px;border-radius:8px;z-index:20;display:none;font-size:14px}
+#sheet{display:none}
+@page{size:A4 landscape;margin:0}
+@media print{body>*:not(#sheet){display:none!important}#sheet{display:block}body{background:#fff;padding:0}}
+</style></head><body>
+<main>
+ <section id="tabCalc">
+  <div class="card" id="prev"><div id="tpl"></div></div>
+  <div class="card"><h3>Профиль (мм)</h3>
+   <label>Типоразмер</label><select id="preset"></select>
+   <div class="row" style="margin-top:8px"><div><label>B — наружная стенка (шарнир)</label><input type="number" inputmode="decimal" id="B" value="20" step="any"></div><div><label>H — боковая грань (режем)</label><input type="number" inputmode="decimal" id="H" value="20" step="any"></div></div>
+   <div class="row"><div><label>t — стенка</label><input type="number" inputmode="decimal" id="t" value="1.5" step="any"></div><div><label>Ro — наружный радиус угла</label><input type="number" inputmode="decimal" id="Ro" value="2.5" step="any"></div></div>
+  </div>
+  <div class="card"><h3>Что гнём</h3>
+   <div class="seg" id="modeSeg"><label class="on"><input type="radio" name="mode" value="bends" checked>Острые гибы</label><label><input type="radio" name="mode" value="arc">Дуга по радиусу</label></div>
+   <div id="bendsBox"><div class="row"><div><label>Угол</label><input type="number" inputmode="decimal" id="angBend" value="135" step="any"></div><div><label>Это</label><select id="angType"><option value="between">между сторонами</option><option value="defl">поворот трубы</option></select></div></div>
+    <label>Расстояния между центрами гибов, мм</label><input type="text" id="spacing" value="100" inputmode="decimal"><div class="hint">один гиб — пусто; несколько: 100; 80; 60</div></div>
+   <div id="arcBox" class="hid"><div class="row row3"><div><label>Угол дуги</label><input type="number" inputmode="decimal" id="angArc" value="90" step="any"></div><div><label>R внутр.</label><input type="number" inputmode="decimal" id="Rin" value="100" step="any"></div><div><label>Клиньев</label><input type="number" inputmode="numeric" id="N" value="8" step="1"></div></div>
+    <button id="autoN" type="button" style="width:100%">Подобрать число клиньев (≈11°)</button></div>
+   <div class="row" style="margin-top:8px"><div><label>Хвост от края до первого гиба</label><input type="number" inputmode="decimal" id="tail" value="30" step="any"></div></div>
+  </div>
+  <div class="card"><h3>Рез</h3>
+   <div class="row"><div><label>Диск (пропил)</label><input type="number" inputmode="decimal" id="kerf" value="1.2" step="any"></div><div><label>Отверстие Ø (0 — нет)</label><input type="number" inputmode="decimal" id="hole" value="2.5" step="any"></div></div>
+   <div class="seg" id="cutSeg"><label class="on"><input type="radio" name="cut" value="center" checked>по центру линии</label><label><input type="radio" name="cut" value="inner">внутри линии</label></div>
+   <div class="chk"><input type="checkbox" id="stripOn"><span>полосы вручную, мм:</span><input type="number" inputmode="decimal" id="strip" value="19" step="any" style="width:80px"></div>
+   <div class="hint">без галочки полосы считаются по радиусу угла трубы</div>
+  </div>
+  <div class="card"><h3>Размеры</h3><table id="tbl"></table><div id="warns"></div></div>
+  <div class="card"><h3>Файлы</h3>
+   <div class="grid2"><button class="pri" id="bPdf">PDF 1:1 (A4)</button><button id="bPrint">Печать</button><button id="bSvg">SVG</button><button id="bDxf">DXF</button></div>
+   <div class="hint">PDF лучше для печати: открывайте в просмотрщике и печатайте «в реальный размер». Проверьте линейку 100 мм.</div>
+   <div class="grid2" style="margin-top:8px"><button id="bSave">Сохранить профиль…</button><button id="bShare">Скопировать параметры</button></div>
+  </div>
+ </section>
+ <section id="tabProf" class="hid"><div class="card"><h3>Сохранённые профили</h3><div id="profList"></div></div></section>
+ <section id="tabHist" class="hid"><div class="card"><h3>История (последние 30)</h3><div id="histList"></div><button class="dng" id="histClear" style="width:100%;margin-top:8px">Очистить историю</button></div></section>
+</main>
+<nav><button class="on" data-tab="tabCalc">Расчёт</button><button data-tab="tabProf">Профили</button><button data-tab="tabHist">История</button></nav>
+<div id="toast"></div><div id="sheet"></div>
+<script>
+/*CORE*/
+const D2R=Math.PI/180;
+function parseSpacing(raw){
+  if(Array.isArray(raw)) return raw.map(Number).filter(x=>x>0);
+  return String(raw==null?'':raw).split(/[;\s]+/).map(s=>parseFloat(s.replace(',','.'))).filter(x=>isFinite(x)&&x>0);
+}
+function calc(p){
+  const {B,H,t,Ro,hole,kerf}=p, errs=[];
+  for(const k of ['B','H','t','Ro','angle','tail','hole','kerf']) if(!isFinite(p[k])) errs.push('заполните все поля ('+k+')');
+  if(errs.length) return {error:errs[0]};
+  if(Math.min(B,H,t)<=0||2*t>=Math.min(B,H)) errs.push('проверьте B, H, t');
+  if(Ro<0||Ro>Math.min(B,H)/2) errs.push('Ro вне диапазона');
+  if(!(p.angle>0&&p.angle<=180)) errs.push('угол должен быть от 0 до 180');
+  if(p.mode==='arc'&&(!(p.N>=1)||!(p.Rin>0))) errs.push('дуга: N >= 1 и R > 0');
+  if(hole<0||hole>=H-t) errs.push('диаметр отверстия вне диапазона');
+  if(errs.length) return {error:errs.join('; ')};
+  const warns=[], apex=H-t, tail=p.tail, spacing=p.spacing&&p.spacing.length?p.spacing:[100];
+  let m,a1,pitch,centers,offs,width,total;
+  if(p.mode==='arc'){
+    const N=Math.round(p.N); m=1; a1=p.angle/N;
+    pitch=(p.Rin+H-t/2)*a1*D2R;
+    centers=[...Array(N).keys()].map(i=>tail+i*pitch); offs=[0];
+    width=2*tail+(N-1)*pitch; total=N;
+    if(a1>45) warns.push('угол на клин '+a1.toFixed(1)+'° > 45°: наружная стенка может треснуть');
+  }else{
+    m=p.angle<=60?1:Math.ceil(p.angle/45); a1=p.angle/m; pitch=H;
+    const ext=(m-1)*pitch; centers=[tail+ext/2];
+    for(const s of spacing) centers.push(centers[centers.length-1]+s);
+    offs=[...Array(m).keys()].map(i=>(i-(m-1)/2)*pitch);
+    width=2*tail+spacing.reduce((a,b)=>a+b,0)+ext; total=m*centers.length;
+    if(m>1) warns.push('угол '+p.angle+'° разбит на '+m+' клина по '+a1+'°');
+  }
+  const wfull=2*apex*Math.tan(a1/2*D2R), w=p.cut==='center'?wfull-kerf:wfull;
+  if(w<=0) warns.push('ширина клина <= 0: уменьшите пропил или увеличьте число клиньев');
+  else if(w<2*kerf) warns.push('узкий клин (меньше двух пропилов): трудно выбрать металл');
+  const land=p.mode==='arc'?pitch-w:spacing[0]-w;
+  if(p.mode==='arc'&&land<2) warns.push('перемычка между клиньями '+land.toFixed(1)+' мм < 2: возьмите меньше клиньев');
+  if(m>1&&w>pitch) warns.push('клинья одного изгиба перекрываются');
+  const side=H-Ro+Math.PI*Ro/4, outer=B-2*Ro+Math.PI*Ro/2;
+  const strips=p.strip>0?[p.strip,p.strip,p.strip]:[side,outer,side];
+  const Ht=strips[0]+strips[1]+strips[2], lwrap=2*H+B-4*Ro+Math.PI*Ro, hole_cy=apex-hole/2;
+  if(width>277||Ht>190) warns.push('шаблон не влезает на A4 (1:1): печатать частями или использовать DXF');
+  const tris=[],circles=[],marks=[];
+  for(const c of centers) for(const o of offs){
+    const x=c+o;
+    tris.push([[x-w/2,Ht],[x,Ht-apex],[x+w/2,Ht]]); tris.push([[x-w/2,0],[x,apex],[x+w/2,0]]);
+    if(hole>0){circles.push([x,Ht-hole_cy]); circles.push([x,hole_cy]);}
+  }
+  let y=0; for(const s of strips.slice(0,2)){y+=s; marks.push([[0,y],[width,y]]);}
+  for(const c of centers) marks.push([[c,-5],[c,Ht+5]]);
+  return {apex,a1,wfull,w,pitch,land,strips,lwrap,hole_cy,centers,width,height:Ht,total,warns,tris,circles,marks,mode:p.mode,hole};
+}
+const f1=x=>(+x).toFixed(1);
+function tplSvg(g,view){
+  const W=g.width,Ht=g.height,Y=y=>Ht-y,mx=view?14:6,top=view?24:6,bot=view?18:6,fs=Math.max(W,70)/50;
+  let s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+(-mx)+' '+(-top)+' '+(W+2*mx)+' '+(Ht+top+bot)+'" '+(view?'':'width="'+(W+2*mx)+'mm" height="'+(Ht+top+bot)+'mm"')+'>';
+  let y0=0;const tint=['#eaf2fb','#fdf3dc','#eaf2fb'],nm=['боковая грань','наружная стенка (шарнир)','боковая грань'];
+  g.strips.forEach((h,i)=>{s+='<rect x="0" y="'+Y(y0+h)+'" width="'+W+'" height="'+h+'" fill="'+tint[i]+'"/>';
+    if(view)s+='<text x="'+W/2+'" y="'+(Y(y0+h/2)+fs*.35)+'" font-size="'+fs+'" fill="#7a8494" text-anchor="middle">'+nm[i]+' '+f1(h)+'</text>';y0+=h;});
+  s+='<rect x="0" y="0" width="'+W+'" height="'+Ht+'" fill="none" stroke="#222" stroke-width=".4"/>';
+  g.marks.forEach(m=>{s+='<line x1="'+m[0][0]+'" y1="'+Y(m[0][1])+'" x2="'+m[1][0]+'" y2="'+Y(m[1][1])+'" stroke="#2a6fdb" stroke-width=".3" stroke-dasharray="2,1"/>';});
+  g.tris.forEach(t=>{s+='<polygon points="'+t.map(q=>q[0]+','+Y(q[1])).join(' ')+'" fill="'+(view?'#f6c9c9':'none')+'" stroke="#b71c1c" stroke-width=".4"/>';});
+  g.circles.forEach(c=>{s+='<circle cx="'+c[0]+'" cy="'+Y(c[1])+'" r="'+g.hole/2+'" fill="#fff" stroke="#b71c1c" stroke-width=".4"/>';});
+  if(view){
+    const c=g.centers;
+    if(c.length>1){const x1=c[0],x2=c[1],yy=-9;
+      s+='<g stroke="#222" stroke-width=".3"><line x1="'+x1+'" y1="'+yy+'" x2="'+x2+'" y2="'+yy+'"/><line x1="'+x1+'" y1="'+(yy-2)+'" x2="'+x1+'" y2="'+(yy+2)+'"/><line x1="'+x2+'" y1="'+(yy-2)+'" x2="'+x2+'" y2="'+(yy+2)+'"/></g>';
+      s+='<text x="'+(x1+x2)/2+'" y="'+(yy-2.5)+'" font-size="'+fs+'" text-anchor="middle">'+f1(x2-x1)+'</text>';}
+    const x0=c[0],yb=Ht+9;
+    s+='<line x1="'+(x0-g.w/2)+'" y1="'+yb+'" x2="'+(x0+g.w/2)+'" y2="'+yb+'" stroke="#b71c1c" stroke-width=".3"/>';
+    s+='<text x="'+x0+'" y="'+(yb+fs*1.4)+'" font-size="'+fs+'" fill="#b71c1c" text-anchor="middle">клин '+f1(g.w)+'</text>';
+    s+='<text x="'+W+'" y="'+(Ht+bot-3)+'" font-size="'+fs*.9+'" fill="#555" text-anchor="end">'+f1(W)+' × '+f1(Ht)+' мм</text>';
+  }
+  return s+'</svg>';
+}
+function dxfString(g){
+  const o=[],a=(c,v)=>o.push(String(c),String(v)),n=v=>(+v).toFixed(4);
+  a(0,'SECTION');a(2,'HEADER');a(9,'$ACADVER');a(1,'AC1009');a(9,'$INSUNITS');a(70,4);a(0,'ENDSEC');
+  a(0,'SECTION');a(2,'TABLES');
+  a(0,'TABLE');a(2,'LTYPE');a(70,1);a(0,'LTYPE');a(2,'CONTINUOUS');a(70,0);a(3,'Solid line');a(72,65);a(73,0);a(40,0);a(0,'ENDTAB');
+  a(0,'TABLE');a(2,'LAYER');a(70,2);
+  a(0,'LAYER');a(2,'CUT');a(70,0);a(62,1);a(6,'CONTINUOUS');
+  a(0,'LAYER');a(2,'MARKS');a(70,0);a(62,5);a(6,'CONTINUOUS');a(0,'ENDTAB');
+  a(0,'ENDSEC');a(0,'SECTION');a(2,'ENTITIES');
+  const L=(layer,p,q)=>{a(0,'LINE');a(8,layer);a(10,n(p[0]));a(20,n(p[1]));a(30,0);a(11,n(q[0]));a(21,n(q[1]));a(31,0);};
+  const W=g.width,H=g.height,R=[[0,0],[W,0],[W,H],[0,H]];
+  for(let i=0;i<4;i++) L('CUT',R[i],R[(i+1)%4]);
+  g.tris.forEach(t=>{L('CUT',t[0],t[1]);L('CUT',t[1],t[2]);L('CUT',t[2],t[0]);});
+  g.circles.forEach(c=>{a(0,'CIRCLE');a(8,'CUT');a(10,n(c[0]));a(20,n(c[1]));a(30,0);a(40,n(g.hole/2));});
+  g.marks.forEach(m=>L('MARKS',m[0],m[1]));
+  a(0,'ENDSEC');a(0,'EOF');
+  return o.join('\n')+'\n';
+}
+function pdfString(g,title){
+  const mm=72/25.4,PW=297*mm,PH=210*mm,k=0.5523,c=[];
+  const W=g.width,Ht=g.height,x0=Math.max(10,(297-W)/2),y0=118;
+  const X=x=>((x0+x)*mm).toFixed(2),Yy=y=>((y0+y)*mm).toFixed(2),N=v=>(v*mm).toFixed(2);
+  const line=(x1,y1,x2,y2)=>c.push(X(x1)+' '+Yy(y1)+' m '+X(x2)+' '+Yy(y2)+' l S');
+  const circ=(cx,cy,r)=>{const px=(x0+cx)*mm,py=(y0+cy)*mm,rr=r*mm,q=k*rr,f=v=>v.toFixed(2);
+    c.push(f(px+rr)+' '+f(py)+' m '+f(px+rr)+' '+f(py+q)+' '+f(px+q)+' '+f(py+rr)+' '+f(px)+' '+f(py+rr)+' c '+
+      f(px-q)+' '+f(py+rr)+' '+f(px-rr)+' '+f(py+q)+' '+f(px-rr)+' '+f(py)+' c '+f(px-rr)+' '+f(py-q)+' '+f(px-q)+' '+f(py-rr)+' '+f(px)+' '+f(py-rr)+' c '+
+      f(px+q)+' '+f(py-rr)+' '+f(px+rr)+' '+f(py-q)+' '+f(px+rr)+' '+f(py)+' c S');};
+  const txt=(x,y,s,sz)=>c.push('BT /F1 '+sz+' Tf '+(x*mm).toFixed(2)+' '+(y*mm).toFixed(2)+' Td ('+s.replace(/[()\\]/g,'')+') Tj ET');
+  c.push('0 g 0 G 0.4 w');
+  c.push(X(0)+' '+Yy(0)+' '+N(W)+' '+N(Ht)+' re S');
+  c.push('0.3 w 0 0 1 RG [2.8 2.8] 0 d');
+  g.marks.forEach(m=>line(m[0][0],m[0][1],m[1][0],m[1][1]));
+  c.push('[] 0 d 0 G 0.5 w');
+  g.tris.forEach(t=>{c.push(X(t[0][0])+' '+Yy(t[0][1])+' m '+X(t[1][0])+' '+Yy(t[1][1])+' l '+X(t[2][0])+' '+Yy(t[2][1])+' l S');});
+  g.circles.forEach(p=>circ(p[0],p[1],g.hole/2));
+  txt(x0,PH/mm-15,title,11); txt(x0,PH/mm-22,'Print at 100% / Actual size. Check: ruler = 100 mm, square = 20 x 20 mm.',9);
+  const sy=60;c.push('0 G 0.4 w');
+  const sx=(297-100)/2;
+  c.push((sx*mm).toFixed(2)+' '+(sy*mm).toFixed(2)+' m '+((sx+100)*mm).toFixed(2)+' '+(sy*mm).toFixed(2)+' l S');
+  for(let i=0;i<=100;i+=10){const h=i%50===0?4:2.5;c.push(((sx+i)*mm).toFixed(2)+' '+(sy*mm).toFixed(2)+' m '+((sx+i)*mm).toFixed(2)+' '+((sy+h)*mm).toFixed(2)+' l S');txt(sx+i-(i>=100?2.5:i>=10?1.5:0.7),sy-5,String(i),7);}
+  txt(sx,sy+8,'100 mm',9);
+  c.push(((sx+115)*mm).toFixed(2)+' '+((sy-3)*mm).toFixed(2)+' '+N(20)+' '+N(20)+' re S'); txt(sx+115,sy-8,'20 x 20 mm',8);
+  const content=c.join('\n');
+  const objs=['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PW.toFixed(2)+' '+PH.toFixed(2)+'] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+    '<< /Length '+content.length+' >>\nstream\n'+content+'\nendstream','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'];
+  let out='%PDF-1.4\n';const offs=[];
+  objs.forEach((o,i)=>{offs.push(out.length);out+=(i+1)+' 0 obj\n'+o+'\nendobj\n';});
+  const xr=out.length;
+  out+='xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n'+offs.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('')+
+    'trailer\n<< /Size '+(objs.length+1)+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF';
+  return out;
+}
+/*ENDCORE*/
+
+// ---------- интерфейс ----------
+const $=id=>document.getElementById(id);
+const PRESETS=[['20×20×1.5',20,20,1.5,2.5],['25×25×1.5',25,25,1.5,3],['25×25×2',25,25,2,3.5],['30×30×2',30,30,2,3.5],['40×40×2',40,40,2,4],['40×20×2, плашмя (H=20)',40,20,2,3.5],['40×20×2, на ребро (H=40)',20,40,2,3.5]];
+PRESETS.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=p[0];$('preset').appendChild(o)});
+const rv=n=>document.querySelector('input[name='+n+']:checked').value;
+const num=id=>parseFloat(String($(id).value).replace(',','.'));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function ui(){return{preset:$('preset').value,B:$('B').value,H:$('H').value,t:$('t').value,Ro:$('Ro').value,mode:rv('mode'),angBend:$('angBend').value,angType:$('angType').value,spacing:$('spacing').value,angArc:$('angArc').value,Rin:$('Rin').value,N:$('N').value,tail:$('tail').value,kerf:$('kerf').value,hole:$('hole').value,cut:rv('cut'),stripOn:$('stripOn').checked,strip:$('strip').value};}
+function applyUi(s){for(const k of ['B','H','t','Ro','angBend','spacing','angArc','Rin','N','tail','kerf','hole','strip'])if(s[k]!=null)$(k).value=s[k];
+  if(s.preset!=null)$('preset').value=s.preset;if(s.angType)$('angType').value=s.angType;$('stripOn').checked=!!s.stripOn;
+  for(const n of ['mode','cut']){const r=document.querySelector('input[name='+n+'][value='+(s[n]||'')+']');if(r)r.checked=true;}segSync();update();}
+function params(){const s=ui();let a;if(s.mode==='arc')a=num('angArc');else{a=num('angBend');if(s.angType==='between')a=180-a;}
+  return{B:num('B'),H:num('H'),t:num('t'),Ro:num('Ro'),mode:s.mode,angle:a,spacing:parseSpacing(s.spacing),tail:num('tail'),Rin:num('Rin'),N:num('N'),kerf:num('kerf'),hole:num('hole'),cut:s.cut,strip:s.stripOn?num('strip'):0};}
+function segSync(){document.querySelectorAll('.seg label').forEach(l=>l.classList.toggle('on',l.querySelector('input').checked));
+  $('bendsBox').classList.toggle('hid',rv('mode')==='arc');$('arcBox').classList.toggle('hid',rv('mode')!=='arc');}
+let G=null;
+function update(){segSync();const g=calc(params());
+  if(g.error){$('tpl').innerHTML='<div class="bad" style="padding:10px">'+g.error+'</div>';$('tbl').innerHTML='';$('warns').innerHTML='';G=null;return;}
+  G=g;$('tpl').innerHTML=tplSvg(g,true);
+  const rows=[['Клин по линии (чертёж)',f1(g.w)+' мм'],['Клин полный (на кромке)',f1(g.wfull)+' мм'],['Угол на клин',f1(g.a1)+'°'],['Вершина от кромки',f1(g.apex)+' мм'],
+    [g.mode==='arc'?'Шаг клиньев':'Перемычка между клиньями',f1(g.mode==='arc'?g.pitch:g.land)+' мм'],['Отверстие: центр от кромки',f1(g.hole_cy)+' мм'],['Развёртка 3 граней',f1(g.lwrap)+' мм'],['Клиньев на шаблоне',(g.total*2)+' ('+g.total+' пар)'],['Размер шаблона',f1(g.width)+' × '+f1(g.height)+' мм']];
+  $('tbl').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>').join('');
+  $('warns').innerHTML=g.warns.map(w=>'<div class="warn">⚠ '+w+'</div>').join('');
+  store.set('tn_last',ui());}
+document.addEventListener('input',e=>{if(e.target.id!=='preset')update();});
+document.addEventListener('change',e=>{if(e.target.id!=='preset')update();});
+$('preset').addEventListener('change',()=>{const p=PRESETS[+$('preset').value];['B','H','t','Ro'].forEach((k,i)=>$(k).value=p[i+1]);update();});
+$('autoN').addEventListener('click',()=>{$('N').value=Math.max(1,Math.ceil(num('angArc')/11.25));update();});
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',2800);}
+function summary(s,g){const a=s.mode==='arc'?('дуга '+s.angArc+'°, R'+s.Rin+', '+s.N+' кл.'):(s.angBend+'° '+(s.angType==='between'?'между сторонами':'поворот')+', '+(parseSpacing(s.spacing).length+1)+' гиб.');
+  return s.B+'×'+s.H+'×'+s.t+' · '+a+(g?' · клин '+f1(g.w):'');}
+function addHistory(){if(!G)return;const s=ui(),h=store.get('tn_hist',[]),key=JSON.stringify(s);
+  if(h.length&&JSON.stringify(h[0].s)===key)return;h.unshift({ts:Date.now(),s:s,sum:summary(s,G)});store.set('tn_hist',h.slice(0,30));}
+function baseName(){const s=ui();return 'tube_'+s.B+'x'+s.H+'x'+s.t+'_'+(s.mode==='arc'?'arc'+s.angArc+'_R'+s.Rin:s.angBend+(s.angType==='between'?'between':'defl'));}
+async function saveFile(name,data,type){
+  const blob=data instanceof Blob?data:new Blob([data],{type:type});const file=new File([blob],name,{type:type});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast('Файл '+name+' сохранён в «Загрузки»');}
+function need(){if(!G){toast('Исправьте параметры: нет расчёта');return false;}return true;}
+$('bPdf').onclick=()=>{if(!need())return;const s=ui();addHistory();
+  saveFile(baseName()+'.pdf',new Blob([pdfString(G,'Tube notch template 1:1 | '+s.B+'x'+s.H+'x'+s.t+' | wedge '+f1(G.w)+' mm')],{type:'application/pdf'}),'application/pdf');};
+$('bSvg').onclick=()=>{if(!need())return;addHistory();saveFile(baseName()+'.svg',tplSvg(G,false),'image/svg+xml');};
+$('bDxf').onclick=()=>{if(!need())return;addHistory();saveFile(baseName()+'.dxf',dxfString(G),'application/dxf');};
+$('bPrint').onclick=()=>{if(!need())return;addHistory();
+  $('sheet').innerHTML='<div style="position:absolute;left:10mm;top:8mm;font:14px sans-serif"><b>Шаблон гиба: '+summary(ui(),G)+'</b><div style="color:#444;font-size:12px;margin-top:2mm">Печать: масштаб 100 %. Проверка: линейка 100 мм и квадрат 20×20.</div></div>'+
+   '<div style="position:absolute;left:10mm;top:28mm">'+tplSvg(G,false)+'</div>'+
+   '<div style="position:absolute;left:10mm;top:'+(28+G.height+20)+'mm"><svg width="100mm" height="8mm" viewBox="0 0 100 8"><g stroke="#000" stroke-width=".3"><line x1="0" y1="4" x2="100" y2="4"/>'+
+   [...Array(11).keys()].map(i=>'<line x1="'+i*10+'" y1="'+(i%5?2:0)+'" x2="'+i*10+'" y2="'+(i%5?6:8)+'"/>').join('')+'</g></svg></div>'+
+   '<div style="position:absolute;left:150mm;top:'+(28+G.height+18)+'mm;width:20mm;height:20mm;border:.3mm solid #000"></div>';
+  setTimeout(()=>window.print(),50);};
+$('bShare').onclick=async()=>{if(!need())return;const t=summary(ui(),G)+'\nКлин '+f1(G.w)+' мм, вершина '+f1(G.apex)+' мм, шаг/перемычка '+f1(G.mode==='arc'?G.pitch:G.land)+' мм, шаблон '+f1(G.width)+'×'+f1(G.height)+' мм';
+  try{if(navigator.share){await navigator.share({text:t});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+  try{await navigator.clipboard.writeText(t);toast('Скопировано');}catch(e){toast(t);}};
+$('bSave').onclick=()=>{const name=prompt('Название профиля',summary(ui(),null).split(' · ').slice(0,2).join(' · '));if(!name)return;
+  const l=store.get('tn_prof',[]);l.unshift({name:name,s:ui()});store.set('tn_prof',l);renderLists();toast('Профиль сохранён');};
+function renderLists(){
+  const pl=store.get('tn_prof',[]);$('profList').innerHTML=pl.length?pl.map((p,i)=>'<div class="item"><div class="t"><b>'+esc(p.name)+'</b><span>'+esc(summary(p.s,null))+'</span></div><button data-ap="'+i+'">Открыть</button><button class="dng" data-dp="'+i+'">✕</button></div>').join(''):'<div class="hint">Пока пусто. На вкладке «Расчёт» нажмите «Сохранить профиль…».</div>';
+  const hl=store.get('tn_hist',[]);$('histList').innerHTML=hl.length?hl.map((h,i)=>'<div class="item"><div class="t"><b>'+esc(h.sum)+'</b><span>'+new Date(h.ts).toLocaleString('ru-RU')+'</span></div><button data-ah="'+i+'">Открыть</button></div>').join(''):'<div class="hint">История пополняется при выгрузке файлов и печати.</div>';}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.ap!=null){applyUi(store.get('tn_prof',[])[+b.dataset.ap].s);showTab('tabCalc');}
+  if(b.dataset.dp!=null&&confirm('Удалить профиль?')){const l=store.get('tn_prof',[]);l.splice(+b.dataset.dp,1);store.set('tn_prof',l);renderLists();}
+  if(b.dataset.ah!=null){applyUi(store.get('tn_hist',[])[+b.dataset.ah].s);showTab('tabCalc');}
+  if(b.dataset.tab)showTab(b.dataset.tab);});
+$('histClear').onclick=()=>{if(confirm('Очистить историю?')){store.set('tn_hist',[]);renderLists();}};
+function showTab(id){['tabCalc','tabProf','tabHist'].forEach(t=>$(t).classList.toggle('hid',t!==id));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===id));if(id!=='tabCalc')renderLists();window.scrollTo(0,0);}
+const last=store.get('tn_last',null);if(last)applyUi(last);else update();renderLists();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
